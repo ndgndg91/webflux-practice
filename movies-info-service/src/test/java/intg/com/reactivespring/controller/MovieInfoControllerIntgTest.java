@@ -63,4 +63,77 @@ class MovieInfoControllerIntgTest {
                      assertNotNull(responseBody.getMovieInfoId());
                 });
     }
+
+    @Test
+    void getAllMovieInfos() {
+        //given
+
+        //when - then
+        webTestClient
+                .get()
+                .uri("/v1/movie-infos")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBodyList(MovieInfo.class)
+                .hasSize(3);
+    }
+
+    @Test
+    void getMovieInfoById() {
+        //given
+        var id = "abc";
+
+        //when - then
+        webTestClient
+                .get()
+                .uri("/v1/movie-infos/{id}", id)
+                .exchange()
+                .expectStatus()
+                .isOk()
+//                .expectBody(MovieInfo.class)
+//                .consumeWith(m -> {
+//                    var responseBody = m.getResponseBody();
+//                    assertNotNull(responseBody);
+//                });
+                .expectBody()
+                .jsonPath("$.name" ).isEqualTo("Dark Knight Rises");
+    }
+
+    @Test
+    void updateMovieInfo() {
+        //given
+        var id = "abc";
+        var movieInfo = new MovieInfo(null, "Dark Knight Rises2", 2005, List.of("Christian Bale", "Michael Cane"), LocalDate.parse("2005-06-15"));
+
+        //when - then
+        webTestClient
+                .put()
+                .uri("/v1/movie-infos/{id}", id)
+                .bodyValue(movieInfo)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody(MovieInfo.class)
+                .consumeWith(m -> {
+                    var responseBody = m.getResponseBody();
+                    assertNotNull(responseBody);
+                    assertNotNull(responseBody.getMovieInfoId());
+                    assertEquals("Dark Knight Rises2", responseBody.getName());
+                });
+    }
+
+    @Test
+    void deleteMovieInfo() {
+        //given
+        var id = "abc";
+
+        //when - then
+        webTestClient
+                .delete()
+                .uri("/v1/movie-infos/{id}", id)
+                .exchange()
+                .expectStatus()
+                .isNoContent();
+    }
 }
