@@ -6,6 +6,7 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Function;
 
 public class FluxAndMonoGeneratorService {
 
@@ -16,6 +17,25 @@ public class FluxAndMonoGeneratorService {
 
     public Mono<String> nameMono() {
         return Mono.just("alex")
+                .log();
+    }
+
+    public Mono<List<String>> namesMonoFlatMap(int stringLength) {
+        return Mono.just("alex")
+                .map(String::toUpperCase)
+                .filter(s -> s.length() > stringLength)
+                .flatMap(this::splitStringMono);
+    }
+
+    private Mono<List<String>> splitStringMono(String s) {
+        return Mono.just(List.of(s.split("")));
+    }
+
+    public Flux<String> namesMonoFlatMapMany(int stringLength) {
+        return Mono.just("alex")
+                .map(String::toUpperCase)
+                .filter(s -> s.length() > stringLength)
+                .flatMapMany(this::splitString)
                 .log();
     }
 
@@ -73,6 +93,34 @@ public class FluxAndMonoGeneratorService {
                 .map(String::toUpperCase)
                 .filter(s -> s.length() > stringLength)
                 .concatMap(this::splitStringWithDelay)
+                .log(); // db or a remote service call
+    }
+
+    public Flux<String> namesFluxTransform(int stringLength) {
+        Function<Flux<String>, Flux<String>> filterMap = name -> name
+                .map(String::toUpperCase)
+                .filter(s -> s.length() > stringLength);
+
+        return Flux.fromIterable(List.of("alex", "ben", "chloe"))
+                .transform(filterMap)
+                .flatMap(this::splitString)
+                .defaultIfEmpty("default")
+                .log(); // db or a remote service call
+    }
+
+    public Flux<String> namesFluxTransformSwitchIfEmpty(int stringLength) {
+        Function<Flux<String>, Flux<String>> filterMap = name -> name
+                .map(String::toUpperCase)
+                .filter(s -> s.length() > stringLength)
+                .flatMap(this::splitString);
+
+        var defaultFlux = Flux.just("default")
+                .transform(filterMap)
+                .log();
+
+        return Flux.fromIterable(List.of("alex", "ben", "chloe"))
+                .transform(filterMap)
+                .switchIfEmpty(defaultFlux)
                 .log(); // db or a remote service call
     }
 

@@ -1,10 +1,9 @@
 package com.learnreactiveprogramming.service;
 
 import org.junit.jupiter.api.Test;
-import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.List;
 
 class FluxAndMonoGeneratorServiceTest {
 
@@ -115,6 +114,73 @@ class FluxAndMonoGeneratorServiceTest {
         StepVerifier.create(namesFlux)
                 .expectNext("A","L","E","X","C","H","L","O","E")
 //                .expectNextCount(9)
+                .verifyComplete();
+    }
+
+    @Test
+    void namesMonoFlatMap() {
+        int stringLength = 3;
+
+        var value = fluxAndMonoGeneratorService.namesMonoFlatMap(stringLength);
+
+        StepVerifier.create(value)
+                .expectNext(List.of("A", "L", "E", "X"))
+                .verifyComplete();
+    }
+
+    @Test
+    void namesMonoFlatMapMany() {
+        // given
+        var stringLength = 3;
+
+        // when
+        var value = fluxAndMonoGeneratorService.namesMonoFlatMapMany(stringLength);
+
+        // then
+        StepVerifier.create(value)
+                .expectNext("A", "L", "E", "X")
+                .verifyComplete();
+    }
+
+    @Test
+    void namesFluxTransform() {
+        // given
+        var stringLength = 3;
+
+        // when
+        var value = fluxAndMonoGeneratorService.namesFluxTransform(stringLength);
+
+        // then
+        StepVerifier.create(value)
+                .expectNext("A","L","E","X","C","H","L","O","E")
+                .verifyComplete();
+    }
+
+    @Test
+    void namesFluxTransform2() {
+        // given
+        var stringLength = 10;
+
+        // when
+        var value = fluxAndMonoGeneratorService.namesFluxTransform(stringLength);
+
+        // then
+        StepVerifier.create(value)
+                .expectNext("default")
+                .verifyComplete();
+    }
+
+    @Test
+    void namesFluxTransformSwitchIfEmpty() {
+        // given
+        var stringLength = 6;
+
+        // when
+        var value = fluxAndMonoGeneratorService.namesFluxTransformSwitchIfEmpty(stringLength);
+
+        // then
+        StepVerifier.create(value)
+                .expectNext("D", "E", "F", "A", "U", "L", "T")
                 .verifyComplete();
     }
 }
