@@ -124,6 +124,28 @@ public class FluxAndMonoGeneratorService {
                 .log(); // db or a remote service call
     }
 
+    public Flux<String> exploreConcat() {
+        var abcFlux = Flux.just("A", "B", "C"); // remote service
+        var defFlux = Flux.just("D", "E", "F"); // db
+
+        return Flux.concat(abcFlux, defFlux).log();
+    }
+
+    public Flux<String> exploreConcatWith() {
+        var abcFlux = Flux.just("A", "B", "C"); // remote service
+        var defFlux = Flux.just("D", "E", "F"); // db
+
+        return abcFlux.concatWith(defFlux).log();
+    }
+
+    public Flux<String> exploreMonoConcatWith() {
+        var aMono = Mono.just("A"); // remote service
+        var bMono = Mono.just("B");
+
+        return aMono.concatWith(bMono).log();
+    }
+
+
     public static void main(String[] args) {
         FluxAndMonoGeneratorService fluxAndMonoGeneratorService = new FluxAndMonoGeneratorService();
 
