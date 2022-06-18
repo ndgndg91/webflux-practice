@@ -103,7 +103,7 @@ public class MoviesInfoControllerUnitTest {
         var movieInfo = new MovieInfo(null, "Dark Knight Rises1", 2005, List.of("Christian Bale", "Michael Cane"), LocalDate.parse("2005-06-16"));
         given(movieInfoService.updateMovieInfo(isA(MovieInfo.class), isA(String.class))).willReturn(
                 Mono.just(new MovieInfo(
-                       id, "Dark Knight Rises1", 2005, List.of("Christian Bale", "Michael Cane"), LocalDate.parse("2005-06-15")
+                        id, "Dark Knight Rises1", 2005, List.of("Christian Bale", "Michael Cane"), LocalDate.parse("2005-06-15")
                 ))
         );
 
