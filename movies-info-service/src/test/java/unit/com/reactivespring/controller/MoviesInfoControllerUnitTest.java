@@ -3,6 +3,8 @@ package com.reactivespring.controller;
 import com.reactivespring.domain.MovieInfo;
 import com.reactivespring.service.MovieInfoService;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -21,6 +23,8 @@ import static org.mockito.BDDMockito.given;
 @WebFluxTest(controllers = MovieInfoController.class)
 @AutoConfigureWebTestClient
 public class MoviesInfoControllerUnitTest {
+
+    private static final Logger log = LoggerFactory.getLogger(MoviesInfoControllerUnitTest.class);
 
     @Autowired
     private WebTestClient webTestClient;
@@ -73,6 +77,26 @@ public class MoviesInfoControllerUnitTest {
     }
 
     @Test
+    void addMovieInfo_validation() {
+        // given
+        var movieInfo = new MovieInfo(null, "", -2005, List.of(""), LocalDate.parse("2005-06-15"));
+
+        // when - then
+        webTestClient.post()
+                .uri("/v1/movie-infos")
+                .bodyValue(movieInfo)
+                .exchange()
+                .expectStatus()
+                .isBadRequest()
+                .expectBody(String.class)
+                .consumeWith(s -> {
+                    var body = s.getResponseBody();
+                    log.info(body);
+                    assertThat(body).isNotNull();
+                });
+    }
+
+    @Test
     void updateMovieInfo() {
         // given
         var id = "abc";
@@ -98,6 +122,5 @@ public class MoviesInfoControllerUnitTest {
                     assertThat(updated.getMovieInfoId()).isNotNull();
                     assertThat("Dark Knight Rises1").isEqualTo(updated.getName());
                 });
-
     }
 }
