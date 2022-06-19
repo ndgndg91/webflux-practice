@@ -2,6 +2,7 @@ package com.reactivespring.globalerrorhandler;
 
 import com.reactivespring.exception.MoviesInfoClientException;
 import com.reactivespring.exception.MoviesInfoServerException;
+import com.reactivespring.exception.ReviewsServerException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,12 @@ public class GlobalErrorHandler {
 
     @ExceptionHandler(MoviesInfoServerException.class)
     public ResponseEntity<String> handleServerException(MoviesInfoServerException e) {
+        log.error("Exception Caught in handleClientException : {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    }
+
+    @ExceptionHandler(ReviewsServerException.class)
+    public ResponseEntity<String> handleReviewServerException(ReviewsServerException e) {
         log.error("Exception Caught in handleClientException : {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }

@@ -1,5 +1,6 @@
 package com.reactivespring.controller;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.reactivespring.domain.Movie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,6 +81,8 @@ public class MoviesControllerIntgTest {
                 .exchange()
                 .expectStatus()
                 .is4xxClientError();
+
+        WireMock.verify(1, getRequestedFor(urlEqualTo("/v1/movie-infos" + "/" + movieId)));
     }
 
     @Test
@@ -137,5 +140,36 @@ public class MoviesControllerIntgTest {
                 .is5xxServerError()
                 .expectBody(String.class)
                 .isEqualTo("Server Exception in MoviesInfoService MovieInfo Service Unavailable");
+
+        WireMock.verify(4, getRequestedFor(urlEqualTo("/v1/movie-infos" + "/" + movieId)));
+    }
+
+    @Test
+    void retrieveMovieById_reviews_5xx() {
+        // given
+        var movieId = "abc";
+        stubFor(get(urlEqualTo("/v1/movie-infos" + "/" + movieId))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withBodyFile("movieinfo.json")));
+
+        stubFor(get(urlEqualTo("/v1/reviews?movieInfoId=" + movieId))
+                .willReturn(aResponse()
+                        .withStatus(500)
+                        .withBody("Review Service Not Available")
+                ));
+
+
+        // when - then
+        webTestClient
+                .get()
+                .uri("/v1/movies/{id}", movieId)
+                .exchange()
+                .expectStatus()
+                .is5xxServerError()
+                .expectBody(String.class)
+                .isEqualTo("Server Exception in ReviewService Review Service Not Available");
+
+        WireMock.verify(4, getRequestedFor(urlPathMatching("/v1/reviews*")));
     }
 }
