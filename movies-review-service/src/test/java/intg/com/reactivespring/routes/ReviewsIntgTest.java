@@ -12,7 +12,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URI;
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -143,5 +142,24 @@ public class ReviewsIntgTest {
                     assertThat(body.getComment()).isEqualTo(review.getComment());
                     assertThat(body.getRating()).isEqualTo(review.getRating());
                 });
+    }
+
+    @Test
+    void updateReview_notFound() {
+        // given
+        var id = "notFoundId";
+        var review = new Review(id, 3L, "not found", 5.0);
+        var uri = UriComponentsBuilder.fromUriString("/v1/reviews/{id}")
+                .buildAndExpand(id).toUri();
+
+        // when - then
+        webTestClient.put()
+                .uri(uri)
+                .bodyValue(review)
+                .exchange()
+                .expectStatus()
+                .isNotFound()
+                .expectBody(String.class)
+                .isEqualTo("Review not found for the given id " + id);
     }
 }
