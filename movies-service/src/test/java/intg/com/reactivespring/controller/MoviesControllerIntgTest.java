@@ -2,6 +2,7 @@ package com.reactivespring.controller;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.reactivespring.domain.Movie;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
@@ -28,6 +29,11 @@ public class MoviesControllerIntgTest {
 
     @Autowired
     private WebTestClient webTestClient;
+
+    @AfterEach
+    void setUp() {
+        WireMock.reset();
+    }
 
     @Test
     void retrieveMovieById() {
