@@ -1,6 +1,7 @@
 package com.reactivespring.router;
 
 import com.reactivespring.domain.Review;
+import com.reactivespring.exceptionhandler.GlobalExceptionHandler;
 import com.reactivespring.handler.ReviewHandler;
 import com.reactivespring.repository.ReviewReactiveRepository;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,7 @@ import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.BDDMockito.given;
 
 @WebFluxTest
-@ContextConfiguration(classes = {ReviewRouter.class, ReviewHandler.class})
+@ContextConfiguration(classes = {ReviewRouter.class, ReviewHandler.class, GlobalExceptionHandler.class})
 @AutoConfigureWebTestClient
 class ReviewRouterTest {
 
@@ -49,5 +50,25 @@ class ReviewRouterTest {
                     assertThat(saved).isNotNull();
                     assertThat(saved.getReviewId()).isNotNull();
                 });
+    }
+
+    @Test
+    void addReview_validation() {
+        // given
+        var review = new Review(null, null, "Good Movie", -9.0);
+        given(repository.save(isA(Review.class))).willReturn(
+                Mono.just(new Review("abc", review.getMovieInfoId(), review.getReviewId(), review.getRating()))
+        );
+
+        // when - then
+        webTestClient.post()
+                .uri("/v1/reviews")
+                .bodyValue(review)
+                .exchange()
+                .expectStatus()
+                .isBadRequest()
+                .expectBody(String.class)
+                .isEqualTo("rating.movieInfoId : must not be null,rating.negative : please pass a non-negative value");
+
     }
 }
