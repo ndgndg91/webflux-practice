@@ -5,10 +5,12 @@ import com.reactivespring.service.MovieInfoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 
 import javax.validation.Valid;
 import java.util.Objects;
@@ -21,11 +23,20 @@ public class MovieInfoController {
 
     private final MovieInfoService movieInfoService;
 
+    Sinks.Many<MovieInfo> moviesInfoSink = Sinks.many().replay().latest();
+
     @PostMapping("/movie-infos")
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<MovieInfo> addMovieInfo(@RequestBody @Valid MovieInfo movieInfo) {
-        return movieInfoService.addMovieInfo(movieInfo);
+        return movieInfoService.addMovieInfo(movieInfo)
+                .doOnNext(saved -> moviesInfoSink.tryEmitNext(saved));
     }
+
+    @GetMapping(value = "movie-infos/stream", produces = MediaType.APPLICATION_NDJSON_VALUE)
+    public Flux<MovieInfo> getMovieInfo() {
+        return moviesInfoSink.asFlux();
+    }
+
 
     @GetMapping("/movie-infos")
     public Flux<MovieInfo> getAllMovieInfos(

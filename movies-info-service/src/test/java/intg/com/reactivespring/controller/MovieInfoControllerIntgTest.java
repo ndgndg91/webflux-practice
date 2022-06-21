@@ -11,10 +11,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.util.UriComponentsBuilder;
+import reactor.test.StepVerifier;
 
 import java.time.LocalDate;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -117,6 +119,43 @@ class MovieInfoControllerIntgTest {
 //                });
                 .expectBody()
                 .jsonPath("$.name" ).isEqualTo("Dark Knight Rises");
+    }
+
+    @Test
+    void getAllMovieInfos_stream() {
+        // given
+        var movieInfo = new MovieInfo(null, "Batman Begins", 2005, List.of("Christian Bale", "Michael Cane"), LocalDate.parse("2005-06-15"));
+
+        //when - then
+        webTestClient
+                .post()
+                .uri("/v1/movie-infos")
+                .bodyValue(movieInfo)
+                .exchange()
+                .expectStatus()
+                .isCreated()
+                .expectBody(MovieInfo.class)
+                .consumeWith(m -> {
+                    var responseBody = m.getResponseBody();
+                    assertNotNull(responseBody);
+                    assertNotNull(responseBody.getMovieInfoId());
+                });
+
+        // when
+        var moviesStreamFlux = webTestClient
+                .get()
+                .uri("/v1/movie-infos/stream")
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .returnResult(MovieInfo.class)
+                .getResponseBody();
+
+        // then
+        StepVerifier.create(moviesStreamFlux)
+                .assertNext(movieInfo1 -> assertThat(movieInfo1.getMovieInfoId()).isNotNull())
+                .thenCancel()
+                .verify();
     }
 
     @Test
